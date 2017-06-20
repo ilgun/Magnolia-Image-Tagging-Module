@@ -65,12 +65,10 @@ public class ImageTaggingModule implements ModuleLifecycle {
     private static final String DAM_WORKSPACE = "dam";
 
     private final Context context;
-    private final GoogleImageTaggingService imageTaggingService;
 
     @Inject
     public ImageTaggingModule(Context context) {
         this.context = context;
-        this.imageTaggingService = new GoogleImageTaggingService();
     }
 
     @Override
@@ -81,6 +79,11 @@ public class ImageTaggingModule implements ModuleLifecycle {
             List<Node> allImagesWithoutPresentTag = Lists.newArrayList(NodeUtil.collectAllChildren(damSession.getRootNode(),
                     notTaggedImagesPredicate()));
 
+            // TODO: to avoid tomcat issues
+            GoogleImageTaggingService imageTaggingService = null;
+            if (allImagesWithoutPresentTag.size() > 1) {
+                imageTaggingService = new GoogleImageTaggingService();
+            }
             // TODO: it's a bit pricey so limit it to 5 :)
             for (int i = 0; i < 5; i++) {
                 Node imageNode = allImagesWithoutPresentTag.get(i);
