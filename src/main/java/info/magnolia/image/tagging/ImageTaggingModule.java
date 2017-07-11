@@ -36,20 +36,29 @@ package info.magnolia.image.tagging;
 
 import info.magnolia.context.Context;
 import info.magnolia.jcr.util.NodeUtil;
-import info.magnolia.ml.GoogleImageTaggingService;
 import info.magnolia.module.ModuleLifecycle;
 import info.magnolia.module.ModuleLifecycleContext;
 
-import java.util.Collection;
+import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.predicate.Predicate;
+import org.datavec.image.loader.NativeImageLoader;
+import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.modelimport.keras.InvalidKerasConfigurationException;
+import org.deeplearning4j.nn.modelimport.keras.UnsupportedKerasConfigurationException;
+import org.deeplearning4j.zoo.ZooModel;
+import org.deeplearning4j.zoo.model.ResNet50;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,10 +74,28 @@ public class ImageTaggingModule implements ModuleLifecycle {
     private static final String DAM_WORKSPACE = "dam";
 
     private final Context context;
+    private final VGG16ImagePreProcessor scaler;
+    private final ComputationGraph cedricModel;
+    private final ImageNetLabels imageNetLabels;
 
     @Inject
-    public ImageTaggingModule(Context context) {
+    public ImageTaggingModule(Context context) throws IOException, InvalidKerasConfigurationException, UnsupportedKerasConfigurationException {
         this.context = context;
+
+        ZooModel zooModel = new ResNet50();
+        this.cedricModel = (ComputationGraph) zooModel.initPretrained();
+        this.scaler = new VGG16ImagePreProcessor();
+        imageNetLabels = new ImageNetLabels();
+    }
+
+    private List<ImageNetLabels.Result> process(Binary node) throws IOException, RepositoryException {
+        INDArray indArray = new NativeImageLoader(224, 224, 3).asMatrix(node.getStream());
+
+        scaler.transform(indArray);
+
+        INDArray[] output1 = cedricModel.output(false, indArray);
+        List<info.magnolia.image.tagging.ImageNetLabels.Result> output = imageNetLabels.decodePredictions(output1[0]);
+        return output;
     }
 
     @Override
@@ -78,20 +105,17 @@ public class ImageTaggingModule implements ModuleLifecycle {
             Session damSession = context.getJCRSession(DAM_WORKSPACE);
             List<Node> allImagesWithoutPresentTag = Lists.newArrayList(NodeUtil.collectAllChildren(damSession.getRootNode(),
                     notTaggedImagesPredicate()));
-
-            // TODO: to avoid tomcat issues
-            GoogleImageTaggingService imageTaggingService = null;
-            if (allImagesWithoutPresentTag.size() > 1) {
-                imageTaggingService = new GoogleImageTaggingService();
+            for (Node node : allImagesWithoutPresentTag) {
+                try {
+                    List<ImageNetLabels.Result> results = process(node.getNode("jcr:content").getProperty("jcr:data").getBinary());
+                    List<String> tags = results.stream().filter(mapper -> mapper.getProbability() > 30).map(ImageNetLabels.Result::getPrediction).collect(Collectors.toList());
+                    node.setProperty(IMAGE_TAGS_PROPERTY, StringUtils.join(tags));
+                    node.getSession().save();
+                } catch (Exception e) {
+                    log.error("An error occurred while tagging images", e);
+                }
             }
-            // TODO: it's a bit pricey so limit it to 5 :)
-            for (int i = 0; i < 5; i++) {
-                Node imageNode = allImagesWithoutPresentTag.get(i);
-                Collection<String> tags = imageTaggingService.processImage(imageNode.getNode("jcr:content").getProperty("jcr:data").getBinary().getStream());
-                imageNode.setProperty(IMAGE_TAGS_PROPERTY, StringUtils.join(tags));
-                imageNode.getSession().save();
-            }
-        } catch (RepositoryException e) {
+        } catch (Exception e) {
             log.error("An error occurred while tagging images", e);
         }
     }

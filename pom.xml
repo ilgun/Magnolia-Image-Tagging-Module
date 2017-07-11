@@ -17,6 +17,7 @@
     <magnoliaVersion>5.5.4</magnoliaVersion>
     <magnoliaUiVersion>5.5.4</magnoliaUiVersion>
     <javaVersion>1.8</javaVersion>
+    <deeplearning-version>0.8.1-SNAPSHOT</deeplearning-version>
   </properties>
 
   <dependencyManagement>
@@ -47,6 +48,41 @@
       <groupId>info.magnolia.ml</groupId>
       <artifactId>google-image-tagging</artifactId>
       <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native-platform</artifactId>
+      <version>${deeplearning-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native</artifactId>
+      <version>${deeplearning-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-api</artifactId>
+      <version>${deeplearning-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-zoo</artifactId>
+      <version>LATEST</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-core</artifactId>
+      <version>${deeplearning-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-modelimport</artifactId>
+      <version>${deeplearning-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.devlib.schmidt</groupId>
+      <artifactId>imageinfo</artifactId>
+      <version>1.9</version>
     </dependency>
   </dependencies>
 
