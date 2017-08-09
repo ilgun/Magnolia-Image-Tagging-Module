@@ -85,7 +85,7 @@ public class ImageTaggingModule implements ModuleLifecycle {
         ZooModel zooModel = new ResNet50();
         this.cedricModel = (ComputationGraph) zooModel.initPretrained();
         this.scaler = new VGG16ImagePreProcessor();
-        imageNetLabels = new ImageNetLabels();
+        this.imageNetLabels = new ImageNetLabels();
     }
 
     private List<ImageNetLabels.Result> process(Binary node) throws IOException, RepositoryException {
@@ -94,8 +94,7 @@ public class ImageTaggingModule implements ModuleLifecycle {
         scaler.transform(indArray);
 
         INDArray[] output1 = cedricModel.output(false, indArray);
-        List<info.magnolia.image.tagging.ImageNetLabels.Result> output = imageNetLabels.decodePredictions(output1[0]);
-        return output;
+        return imageNetLabels.decodePredictions(output1[0]);
     }
 
     @Override
