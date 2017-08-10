@@ -75,7 +75,7 @@ public class ImageTaggingModule implements ModuleLifecycle {
 
     private final Context context;
     private final VGG16ImagePreProcessor scaler;
-    private final ComputationGraph cedricModel;
+    private final ComputationGraph computationGraph;
     private final ImageNetLabels imageNetLabels;
 
     @Inject
@@ -83,7 +83,7 @@ public class ImageTaggingModule implements ModuleLifecycle {
         this.context = context;
 
         ZooModel zooModel = new ResNet50();
-        this.cedricModel = (ComputationGraph) zooModel.initPretrained();
+        this.computationGraph = (ComputationGraph) zooModel.initPretrained();
         this.scaler = new VGG16ImagePreProcessor();
         this.imageNetLabels = new ImageNetLabels();
     }
@@ -93,8 +93,8 @@ public class ImageTaggingModule implements ModuleLifecycle {
 
         scaler.transform(indArray);
 
-        INDArray[] output1 = cedricModel.output(false, indArray);
-        return imageNetLabels.decodePredictions(output1[0]);
+        INDArray[] output = computationGraph.output(false, indArray);
+        return imageNetLabels.decodePredictions(output[0]);
     }
 
     @Override
