@@ -107,7 +107,7 @@ public class ImageTaggingModule implements ModuleLifecycle {
             for (Node node : allImagesWithoutPresentTag) {
                 try {
                     List<ImageNetLabels.Result> results = process(node.getNode("jcr:content").getProperty("jcr:data").getBinary());
-                    List<String> tags = results.stream().filter(mapper -> mapper.getProbability() > 30).map(ImageNetLabels.Result::getPrediction).collect(Collectors.toList());
+                    List<String> tags = results.stream().filter(result -> result.getProbability() > 30).map(ImageNetLabels.Result::getPrediction).collect(Collectors.toList());
                     node.setProperty(IMAGE_TAGS_PROPERTY, StringUtils.join(tags));
                     node.getSession().save();
                 } catch (Exception e) {
