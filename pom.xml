@@ -79,6 +79,29 @@
       <artifactId>imageinfo</artifactId>
       <version>1.9</version>
     </dependency>
+
+    <!--To handle svg cases -->
+    <dependency>
+      <groupId>com.twelvemonkeys.imageio</groupId>
+      <artifactId>imageio-batik</artifactId> <!-- svg -->
+      <version>3.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId>
+      <artifactId>batik-transcoder</artifactId>
+      <version>1.6-1</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>fop</artifactId>
+          <groupId>fop</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>xml-apis</groupId>
+          <artifactId>xmlParserAPIs</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>

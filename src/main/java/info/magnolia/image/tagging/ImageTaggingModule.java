@@ -39,10 +39,12 @@ import info.magnolia.jcr.util.NodeUtil;
 import info.magnolia.module.ModuleLifecycle;
 import info.magnolia.module.ModuleLifecycleContext;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import javax.jcr.Binary;
 import javax.jcr.Node;
@@ -89,8 +91,16 @@ public class ImageTaggingModule implements ModuleLifecycle {
         this.imageNetLabels = new ImageNetLabels();
     }
 
-    private List<ImageNetLabels.Result> process(Binary node) throws IOException, RepositoryException {
-        INDArray indArray = new NativeImageLoader(224, 224, 3).asMatrix(node.getStream());
+    private List<ImageNetLabels.Result> process(Node node) throws IOException, RepositoryException {
+        Binary binary = node.getNode("jcr:content").getProperty("jcr:data").getBinary();
+
+        INDArray indArray;
+        if (node.getName().contains(".svg")) {
+            BufferedImage bufferedSVGImage = ImageIO.read(binary.getStream());
+            indArray = new NativeImageLoader(224, 224, 3).asMatrix(bufferedSVGImage);
+        } else {
+            indArray = new NativeImageLoader(224, 224, 3).asMatrix(binary.getStream());
+        }
 
         scaler.transform(indArray);
 
@@ -107,7 +117,7 @@ public class ImageTaggingModule implements ModuleLifecycle {
                     notTaggedImagesPredicate()));
             for (Node node : allImagesWithoutPresentTag) {
                 try {
-                    List<ImageNetLabels.Result> results = process(node.getNode("jcr:content").getProperty("jcr:data").getBinary());
+                    List<ImageNetLabels.Result> results = process(node);
                     List<String> tags = results.stream().filter(result -> result.getProbability() > 30).map(ImageNetLabels.Result::getPrediction).collect(Collectors.toList());
                     node.setProperty(IMAGE_TAGS_PROPERTY, StringUtils.join(tags));
                     node.getSession().save();
