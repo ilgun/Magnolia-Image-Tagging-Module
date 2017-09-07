@@ -70,8 +70,9 @@ import com.google.common.collect.Lists;
 public class ImageTaggingModule implements ModuleLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(ImageTaggingModule.class);
-    private static final String IMAGE_TAGS_PROPERTY = "imageTags";
-    private static final String DAM_WORKSPACE = "dam";
+
+    public static final String IMAGE_TAGS_PROPERTY = "imageTags";
+    public static final String DAM_WORKSPACE = "dam";
 
     private final Context context;
     private final VGG16ImagePreProcessor scaler;
