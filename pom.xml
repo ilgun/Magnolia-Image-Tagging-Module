@@ -14,8 +14,7 @@
   <packaging>jar</packaging>
 
   <properties>
-    <magnoliaVersion>5.5.4</magnoliaVersion>
-    <magnoliaUiVersion>5.5.4</magnoliaUiVersion>
+    <magnoliaVersion>5.6</magnoliaVersion>
     <javaVersion>1.8</javaVersion>
     <deeplearning-version>0.9.1</deeplearning-version>
   </properties>
@@ -26,13 +25,6 @@
         <groupId>info.magnolia</groupId>
         <artifactId>magnolia-project</artifactId>
         <version>${magnoliaVersion}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>info.magnolia.ui</groupId>
-        <artifactId>magnolia-ui-project</artifactId>
-        <version>${magnoliaUiVersion}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
